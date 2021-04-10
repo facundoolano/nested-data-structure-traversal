@@ -1,5 +1,3 @@
-; java -cp clojure.jar clojure.main clojure.clj
-
 (def sections [{:title                 "Getting started"
                 :reset-lesson-position false
                 :lessons               [{"name" "Welcome"}
@@ -15,24 +13,23 @@
                 :lessons               [{"name" "Mutability"}
                                         {"name" "Immutability"}]}])
 
-
 (defn traverse-sections
   [sections]
-  (first
-   (reduce
-
-    (fn [[result position lesson-position] section]
+  (loop [[section & rest] sections
+         position         1
+         lesson-position  1
+         result           []]
+    (if section
       (let [lessons               (:lessons section)
             reset-lesson-position (:reset-lesson-position section)
             lessons               (traverse-lessons lessons lesson-position reset-lesson-position)
             last-lesson-position  (:position (last lessons))
             section               (assoc section :position position :lessons lessons)]
-
-        [(conj result section) (inc position) (inc last-lesson-position)]))
-
-    [[] 1 1]
-    sections)))
-
+        (recur rest
+               (inc position)
+               (inc last-lesson-position)
+               (conj result section)))
+      result)))
 
 (defn traverse-lessons
   [lessons position reset]
