@@ -29,22 +29,21 @@
     }
 ]).
 
-%% TODO check tail call optimization implications
+traverse_sections([Section | Rest], Output, SectionPosition, LessonPosition) ->
+    #{lessons := Lessons, reset_lesson_position := ResetPosition} = Section,
 
-traverse_sections([Section | Rest], Output, SectionPosition, LessonPositon) ->
-    {Lessons, ActualLessonPosition} =
-        case Section of
-            #{lessons := Lessons, reset_lesson_position := true} -> {Lessons, 1};
-            #{lessons := Lessons} -> {Lessons, LessonPositon}
-        end,
-
-    {LessonsWithPostions, NextLessonPosition} = traverse_lessons(Lessons, [], ActualLessonPosition),
+    {LessonsWithPostions, NextLessonPosition} = traverse_lessons(Lessons, LessonPosition, ResetPosition),
     SectionWithPositions = Section#{position => SectionPosition,
                                     lessons => LessonsWithPostions},
 
     traverse_sections(Rest, [SectionWithPositions | Output], SectionPosition + 1, NextLessonPosition);
 traverse_sections([], Output, _, _) ->
     lists:reverse(Output).
+
+traverse_lessons(Lessons, LessonPosition, _Reset=false) ->
+    traverse_lessons(Lessons, [], LessonPosition);
+traverse_lessons(Lessons, _LessonPosition, _Reset=true) ->
+    traverse_lessons(Lessons, [], 1);
 
 traverse_lessons([Lesson | Rest], Output, LessonPosition) ->
     LessonWithPosition = Lesson#{position => LessonPosition},
